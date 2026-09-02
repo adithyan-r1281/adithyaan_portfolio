@@ -636,6 +636,53 @@
   .footer-links a{ color: var(--text-faint); transition: color 0.2s ease; }
   .footer-links a:hover{ color: var(--accent); }
 
+  /* Animated drifting blobs */
+  .bg-field::before{
+    animation: driftA 22s ease-in-out infinite alternate;
+  }
+  .bg-field::after{
+    animation: driftB 26s ease-in-out infinite alternate;
+  }
+  @keyframes driftA{
+    from{ transform: translate(0,0); }
+    to{ transform: translate(60px, 40px); }
+  }
+  @keyframes driftB{
+    from{ transform: translate(0,0); }
+    to{ transform: translate(-50px, -30px); }
+  }
+  /* Scroll-reveal on sections */
+  .reveal{
+    opacity: 0;
+    transform: translateY(24px);
+    transition: opacity 0.7s ease, transform 0.7s ease;
+  }
+  .reveal.visible{
+    opacity: 1;
+    transform: translateY(0);
+  }
+  /* Skill chip stagger */
+  .chip{
+    opacity: 0;
+    transform: translateY(10px);
+    transition: opacity 0.4s ease, transform 0.4s ease, border-color 0.2s ease, color 0.2s ease, background 0.2s ease;
+  }
+  .chip.visible{ opacity: 1; transform: translateY(0); }
+  /* project card titlt glow */
+  .project-card{
+    position: relative;
+    transform-style: preserve-3d;
+  }
+  .project-card::after{
+    content:'';
+    position: absolute; inset: 0;
+    border-radius: 12px;
+    background: radial-gradient(circle at var(--mx,50%) var(--my,50%), rgba(201,162,39,0.15), transparent 60%);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    pointer-events: none;
+  }
+  .project-card:hover::after{ opacity: 1; }
   /* ---------- Responsive ---------- */
   @media (max-width: 1100px){
     .side-nav{ display: none; }
@@ -727,7 +774,7 @@
 
 <main>
 
-  <section id="about" class="section-pad">
+  <section id="about" class="section-pad reveal">
     <div class="wrap-wide">
       <span class="eyebrow-label">About</span>
       <h2 class="section-heading">Two and a half years deep in CMS codebases — and still enjoying it.</h2>
@@ -755,7 +802,7 @@
     </div>
   </section>
 
-  <section id="skills" class="section-pad">
+  <section id="skills" class="section-pad reveal">
     <div class="wrap-wide">
       <span class="eyebrow-label">Skills</span>
       <h2 class="section-heading">The stack I build with day to day.</h2>
@@ -801,7 +848,7 @@
     </div>
   </section>
 
-  <section id="experience" class="section-pad">
+  <section id="experience" class="section-pad reveal">
     <div class="wrap-wide">
       <span class="eyebrow-label">Experience</span>
       <h2 class="section-heading">Where I've been putting this stack to work.</h2>
@@ -821,7 +868,7 @@
     </div>
   </section>
 
-  <section id="projects" class="section-pad">
+  <section id="projects" class="section-pad reveal">
     <div class="wrap-wide">
       <span class="eyebrow-label">Projects</span>
       <h2 class="section-heading">A closer look at the work.</h2>
@@ -874,7 +921,7 @@
     </div>
   </section>
 
-  <section id="contact" class="section-pad">
+  <section id="contact" class="section-pad reveal">
     <div class="wrap">
       <div class="contact-panel">
         <h2>Have a project in mind?</h2>
@@ -1002,7 +1049,51 @@
     }
     setTimeout(typeNext, 900);
   }
-</script>
+  if(!window.matchMedia('(prefers-reduced-motion: reduce)').matches){
+  // Scroll-reveal on sections
+  const revealEls = document.querySelectorAll('.reveal');
+  const revealObserver = new IntersectionObserver((entries) => {
+    entries.forEach(e => { if(e.isIntersecting) e.target.classList.add('visible'); });
+  }, { threshold: 0.15 });
+  revealEls.forEach(el => revealObserver.observe(el));
+
+  //skill chip 
+  const chips = document.querySelectorAll('.chip');
+  const chipObserver = new IntersectionObserver((entries) => {
+    entries.forEach(e => {
+      if(e.isIntersecting){
+        const i = Array.from(chips).indexOf(e.target);
+        setTimeout(() => e.target.classList.add('visible'), i * 40);
+        chipObserver.unobserve(e.target);
+      }
+    });
+  }, { threshold: 0.3 });
+  chips.forEach(c => chipObserver.observe(c));
+
+  //project card glow
+  document.querySelectorAll('.project-card').forEach(card => {
+    card.addEventListener('mousemove', (e) => {
+      const r = card.getBoundingClientRect();
+      const x = e.clientX - r.left, y = e.clientY - r.top;
+      card.style.setProperty('--mx', x + 'px');
+      card.style.setProperty('--my', y + 'px');
+      const rx = ((y / r.height) - 0.5) * -6;
+      const ry = ((x / r.width) - 0.5) * 6;
+      card.style.transform = `perspective(600px) rotateX(${rx}deg) rotateY(${ry}deg) translateY(-4px)`;
+    });
+    card.addEventListener('mouseleave', () => { card.style.transform = ''; });
+  });
+  //Magnetic button
+  // document.querySelectorAll('.btn-primary, .btn-ghost').forEach(btn => {
+  //   btn.addEventListener('mousemove', (e) => {
+  //     const r = btn.getBoundingClientRect();
+  //     const x = e.clientX - r.left - r.width/2, y = e.clientY - r.top - r.height/2;
+  //     btn.style.transform = `translate(${x*0.18}px, ${y*0.4}px)`;
+  //   });
+  //   btn.addEventListener('mouseleave', () => { btn.style.transform = ''; });
+  // });
+  }
+  </script>
 
 </body>
 </html>
